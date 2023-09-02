@@ -2,3 +2,4 @@ To do list:
   Make Henry bot identicle to Weis. (Needs big motors)
   look at code for runs from last year and make it easy to run sections of codes.
   keep color sensor triggering runs.
+  use reflected light to know where on the board we are to have a robot that can think and know what to do next
