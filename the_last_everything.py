@@ -154,7 +154,7 @@ async def boat2():
 
 #0    craft creator(
 #    make sure that the yellow gear pole is down on the black part and that the chick-pin is in place and the end of the arm is parralell with the ground )
-#1 new main  
+#1 boat2
 #2a performer
 #2b orange person in music
 #2c orange person in the middle
