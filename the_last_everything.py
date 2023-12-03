@@ -138,10 +138,10 @@ async def run_across():
     await gyro_straight(degrees = 2000, power = 1000)
 
 async def music_maker():
-    await gyro_straight(degrees=1200, power = 500)
+    await gyro_straight(degrees=1200, power = 700)
     #await attachment_motor(tan_black="black", degrees = -200, speed= 200)
     await runloop.sleep_ms(1000)
-    await turn(degrees = 20,  direction="right",speed = 100, music_maker=True)
+    await turn(degrees = 20,  direction="right",speed = 300, music_maker=True)
     await gyro_straight(degrees=1200, forward=False)
 
 async def mueseum():
@@ -149,8 +149,16 @@ async def mueseum():
     await gyro_straight(degrees = 400, power = 1000)
 
 async def boat2():
-    await gyro_straight(1050, power = 500)
-    await gyro_straight(1050, power = 500, forward=False)
+    await gyro_straight(1050, power = 1000)
+    await gyro_straight(1050, power = 1000, forward=False)
+
+async def theater_faces():
+    await gyro_straight(forward=False, degrees = 1300)
+    await gyro_straight(degrees = 300)
+    await gyro_straight(degrees = 400, forward=False,reset_yaw=False)
+    await gyro_straight(degrees = 800)
+    await turn(degrees = 50, direction= "right")
+    await gyro_straight(degrees = 400)
 
 #0    craft creator(
 #    make sure that the yellow gear pole is down on the black part and that the chick-pin is in place and the end of the arm is parralell with the ground )
@@ -165,4 +173,4 @@ async def boat2():
 #6 mueseum 
 
 
-runloop.run(boat2())
+runloop.run(music_maker())
