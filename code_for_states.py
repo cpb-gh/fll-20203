@@ -1,0 +1,167 @@
+from hub import light_matrix, port, motion_sensor, temperature
+from motor import DISCONNECTED, HOLD, run
+import runloop
+import color_sensor
+import motor_pair
+import motor
+
+async def gyro_straight(degrees, forward = True, reset_yaw = True, power = 500):
+    motor_pair.unpair(motor_pair.PAIR_1)
+    error_history=[]
+    print("in gyro straight degrees {} forward {} reset yaw {}".format(degrees, forward, reset_yaw))
+    motor_pair.pair(motor_pair.PAIR_1, port.C, port.F)
+    if reset_yaw == True:
+        motion_sensor.reset_yaw(0)
+    if forward == False:
+        speed = power
+    else:
+        speed = -power
+    print("yaw in gyro straight:",motion_sensor.tilt_angles()[0])
+    motor_pair.move_tank(motor_pair.PAIR_1,speed, speed)
+    motor.reset_relative_position(5, 0)
+    degrees_moved = 0
+    while degrees_moved < degrees:
+        degrees_moved = abs(motor.relative_position(5))
+        angles = motion_sensor.tilt_angles()
+        yaw = angles[0]
+        #print(degrees_moved)
+        error_history.append(yaw)
+        correction = pid(error_history)
+        right_wheel_speed = int(speed + correction)
+        left_wheel_speed = int(speed - correction)
+        motor_pair.move_tank(motor_pair.PAIR_1, right_wheel_speed, left_wheel_speed)
+        #await runloop.sleep_ms(700)
+    print("gyro straight degrees moved {}".format(degrees_moved))
+    print("gyro straight error history length {}".format(len(error_history)))
+    motor_pair.stop(motor_pair.PAIR_1)
+
+async def attachment_motor(tan_black, degrees, speed):
+    print("in attachment motor spinning {}, degrees {}".format(tan_black, degrees))
+    if tan_black == "tan":
+        which_port = port.B
+    elif tan_black == "black":
+        which_port = port.A
+    await motor.run_for_degrees(which_port, degrees, speed)
+    return
+
+def pid(error_history,kp = 0.4, ki=0.001, kd=0.5):
+    # error_history must have at least 2 entrys for pid to work
+    if len(error_history) < 2: 
+        return 0
+    p = error_history[-1]
+
+    i = sum(error_history)
+
+    d = error_history[-1] - error_history[-2]
+
+    correction = (p*kp) + (i*ki) + (d*kd)
+    return correction
+
+async def turn(degrees, direction, speed = 100, music_maker = False):
+    motor_pair.unpair(motor_pair.PAIR_1)
+    motor_pair.pair(motor_pair.PAIR_1, port.C, port.F)
+    motion_sensor.reset_yaw(0)
+    print("yaw in turn:",motion_sensor.tilt_angles()[0])
+    # we move in decigrees
+    degrees = degrees*10
+    if music_maker == True:
+        motor_pair.move_tank(motor_pair.PAIR_1, speed, 0)
+    elif direction == "right":
+        print("turning right")
+        motor_pair.move_tank(motor_pair.PAIR_1, speed, speed*-1)
+    elif direction == "left":
+        print("turning left")
+        motor_pair.move_tank(motor_pair.PAIR_1, speed*-1, speed)
+    else:
+        print("Unknown direction {}".format(direction))
+    yaw = motion_sensor.tilt_angles()[0]
+    while abs(yaw) < degrees:
+        #print(yaw)
+        yaw = motion_sensor.tilt_angles()[0]
+        #await runloop.sleep_ms(200)
+    motor_pair.stop(motor_pair.PAIR_1)
+    print(yaw)
+    #motion_sensor.reset_yaw(0)
+
+
+async def craft_creator():
+    light_matrix.write("craft creator")
+    await gyro_straight(degrees = 1000, forward= False)
+    await attachment_motor(tan_black="tan", degrees= 300, speed = 400)
+    #await gyro_straight(degrees = 200, forward = False)
+    await gyro_straight(degrees= 800, forward= True, power = 700)
+    await gyro_straight(degrees= 500, forward= True, power = 600)
+
+async def performer():
+    light_matrix.write("everything")
+    await gyro_straight(degrees =  950, power=  1000)
+    await gyro_straight(degrees = 400, power= 400, reset_yaw=False)
+    await gyro_straight(600, forward= False, reset_yaw= False, power = 1000)
+    await gyro_straight(900, forward=False, reset_yaw=False, power= 400)
+
+async def experimental_dragon():
+    light_matrix.write("dragon")
+    await gyro_straight(degrees= 360, forward=False)
+    await turn(15, direction = "right", speed = 1000)
+    await turn(0, direction = "left", speed = 100)
+    await gyro_straight(degrees= 550, forward=True)
+
+async def run_across():
+    light_matrix.write("going across!")
+    await gyro_straight(degrees=1100, forward=True, power = 800)
+    await turn(degrees=40, direction="right", speed= 100)
+    await gyro_straight(degrees = 200)
+    await turn(degrees=50, direction="left", speed= 100)
+    await gyro_straight(degrees=0)
+    await gyro_straight(degrees = 2000, power = 1000)
+
+async def music_maker():
+    await gyro_straight(degrees=1200, power = 700)
+    #await attachment_motor(tan_black="black", degrees = -200, speed= 200)
+    await runloop.sleep_ms(1000)
+    await turn(degrees = 20,  direction="right",speed = 300, music_maker=True)
+    await gyro_straight(degrees=1200, forward=False)
+
+async def mueseum():
+    await gyro_straight(degrees = 200, power = 500, forward=False)
+    await turn(degrees = 35, direction = "right",speed=40)
+    await gyro_straight(degrees = 1800, forward=False, power = 800)
+    await runloop.sleep_ms(300)
+    await gyro_straight(degrees=185, forward=True)
+    await turn(degrees = 8, direction="left")
+    await runloop.sleep_ms(300)
+    await gyro_straight(degrees=150, forward=False)
+    await gyro_straight(degrees = 300, forward = True)
+    
+async def music_note_and_preformer():
+    await gyro_straight(degrees=1650, power = 800)
+    await gyro_straight(degrees=250, power = 300, reset_yaw=False, forward=False)
+    await turn(degrees=50,direction="right",speed=100)
+    await gyro_straight(degrees=300, power = 300)
+    await gyro_straight(degrees=200, power = 300, forward=False)
+    await turn(degrees=50,direction="left",speed=100)
+    await gyro_straight(degrees = 1350, forward=False, power = 800)
+
+async def skateboarder_and_spinnything():
+    await gyro_straight(degrees=900, forward=False)
+    await turn(direction="right", degrees=40)
+    await gyro_straight(degrees=500, forward=False)
+    await gyro_straight(degrees=160, forward=True)
+    await turn(direction="left", degrees=80)
+    await gyro_straight(degrees=250, forward=False)
+    await runloop.sleep_ms(500)
+    await gyro_straight(degrees=200, forward=True)
+    await gyro_straight(degrees=200, forward=False)
+    await runloop.sleep_ms(500)
+    await gyro_straight(degrees=200, forward=True)
+    await turn(direction="right", degrees=70)
+    await gyro_straight(degrees=1500)
+
+#0 craft creator
+#1 music_note_and_performer
+#2 performer(boat)
+#3 run_across 
+#4 music maker
+#5 skateboard_and_spinnything 
+#6 experimental_dragon 
+#7 museum
